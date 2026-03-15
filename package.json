@@ -26,6 +26,7 @@
     "@fontsource/be-vietnam-pro": "^5.2.8",
     "@guolao/vue-monaco-editor": "^1.6.0",
     "@tailwindcss/vite": "^4.2.1",
+    "electron-updater": "^6.8.3",
     "katex": "^0.16.38",
     "lucide-vue-next": "^0.577.0",
     "monaco-editor": "^0.55.1",
@@ -58,6 +59,13 @@
       "electron/main.js",
       "electron/preload.js",
       "package.json"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "EDU-TMATH",
+        "repo": "EXAM_CLIENT"
+      }
     ],
     "linux": {
       "icon": "electron/logo.png",
