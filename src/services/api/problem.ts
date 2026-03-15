@@ -175,7 +175,7 @@ async function getContestVersionUpdate(contestKey: string, options?: { forceRefr
         return cached.value
     }
 
-    const result = await requestApi<unknown>(`/contests/${contestKey}/version/`, {
+    const result = await requestApi<unknown>(`/contest/${contestKey}/version/`, {
         method: "GET",
         errorMessage: "Không kiểm tra được version cuộc thi"
     })
@@ -206,7 +206,7 @@ async function getProblemVersionUpdate(contestKey: string, code: string, options
         return cached.value
     }
 
-    const result = await requestApi<unknown>(`/contests/${contestKey}/problems/${code}/version/`, {
+    const result = await requestApi<unknown>(`/contest/${contestKey}/problems/${code}/version/`, {
         method: "GET",
         errorMessage: "Không kiểm tra được version bài tập"
     })
@@ -398,7 +398,7 @@ export async function getSubmissionExists(contestKey: string, code: string, opti
         return cached.value
     }
 
-    const result = await requestApi<unknown>(`/contests/${contestKey}/problems/${code}/submission/exists/`, {
+    const result = await requestApi<unknown>(`/contest/${contestKey}/problems/${code}/submission/exists/`, {
         method: "GET",
         errorMessage: "Không kiểm tra được trạng thái submission"
     })
@@ -462,7 +462,7 @@ export async function getSubmissionSource(contestKey: string, code: string, opti
         return storageCached
     }
 
-    const result = await requestApi<unknown>(`/contests/${contestKey}/problems/${code}/submission/source/`, {
+    const result = await requestApi<unknown>(`/contest/${contestKey}/problems/${code}/submission/source/`, {
         method: "GET",
         errorMessage: "Không lấy được source submission"
     })
@@ -619,7 +619,7 @@ async function syncSubmittedStatusFromServer(contestKey: string, baseProblems: E
 }
 
 async function fetchContestProblems(contestKey: string): Promise<ExamProblem[]> {
-    const result = await requestApi<unknown>(`/contests/${contestKey}/problems/`, {
+    const result = await requestApi<unknown>(`/contest/${contestKey}/problems/`, {
         method: "GET",
         errorMessage: "Failed to load contest problems"
     })
@@ -705,7 +705,7 @@ export async function getExamProblemDetail(contestKey: string, code: string): Pr
         problemDetailCache.delete(detailKey)
     }
 
-    const result = await requestApi<unknown>(`/contests/${contestKey}/problems/${code}/`, {
+    const result = await requestApi<unknown>(`/contest/${contestKey}/problems/${code}/`, {
         method: "GET",
         errorMessage: "Không tải được chi tiết bài tập"
     })
@@ -755,7 +755,7 @@ export async function submitExamProblem(
         source: sourceCode
     }
 
-    const result = await requestApi<unknown>(`/contests/${contestKey}/problems/${code}/submit/`, {
+    const result = await requestApi<unknown>(`/contest/${contestKey}/problems/${code}/submit/`, {
         method: "POST",
         body,
         errorMessage: "Không thể nạp bài"

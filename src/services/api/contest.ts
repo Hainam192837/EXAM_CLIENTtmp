@@ -109,6 +109,15 @@ function sanitizeVersionPayload(raw: unknown): number | null {
     return version
 }
 
+function readContestPk(raw: unknown): number | null {
+    if (!raw || typeof raw !== "object") {
+        return null
+    }
+
+    const payload = raw as Record<string, unknown>
+    return typeof payload.pk === "number" ? payload.pk : null
+}
+
 async function getContestVersion(contestKey: string, options?: { forceRefresh?: boolean }): Promise<number> {
     const forceRefresh = Boolean(options?.forceRefresh)
     const cacheKey = contestDetailCacheKey(contestKey)
@@ -119,7 +128,7 @@ async function getContestVersion(contestKey: string, options?: { forceRefresh?: 
         return cached.value
     }
 
-    const result = await requestApi<unknown>(`/contests/${contestKey}/version/`, {
+    const result = await requestApi<unknown>(`/contest/${contestKey}/version/`, {
         method: "GET",
         errorMessage: "Không kiểm tra được version cuộc thi"
     })
@@ -185,7 +194,7 @@ export async function getContestDetail(contestKey: string, options?: { forceRefr
         contestDetailCache.delete(cacheKey)
     }
 
-    const result = await requestApi<unknown>(`/contests/${contestKey}/`, {
+    const result = await requestApi<unknown>(`/contest/${contestKey}/`, {
         method: "GET",
         errorMessage: "Không tải được chi tiết cuộc thi"
     })
@@ -207,30 +216,52 @@ export async function getContestDetail(contestKey: string, options?: { forceRefr
 
 export async function getCurrentContest(): Promise<Contest | null> {
     ensureContestCacheScope()
-    const result = await requestApi<Contest | null>("/contests/current/", {
+    const result = await requestApi<unknown>("/contests/current/", {
         method: "GET",
         errorMessage: "Không thể kiểm tra cuộc thi hiện tại"
     })
     if (result.status === 401) {
+        console.log("[contest.current] 401 -> unauthenticated, current contest: null")
         return null
     }
     if (result.error) {
+        console.log("[contest.current] request error:", result.error)
         throw new Error(result.error)
     }
 
     const data = result.data
-    const sanitized = data ? sanitizeContestDetail(data) : null
-    if (sanitized) {
-        setContestDetailCache(sanitized)
+    if (!data) {
+        console.log("[contest.current] null")
+        return null
     }
-    return sanitized
+
+    const fullContest = sanitizeContestDetail(data)
+    if (fullContest) {
+        console.log("[contest.current]", fullContest)
+        setContestDetailCache(fullContest)
+        return fullContest
+    }
+
+    const contestPk = readContestPk(data)
+    if (contestPk === null) {
+        console.log("[contest.current] invalid payload:", data)
+        return null
+    }
+
+    const contests = await getContests()
+    const resolvedContest = contests.find((contest) => contest.pk === contestPk) || null
+    console.log("[contest.current] resolved by pk:", { pk: contestPk, contest: resolvedContest })
+    if (resolvedContest) {
+        setContestDetailCache(resolvedContest)
+    }
+    return resolvedContest
 }
 
 export async function joinContest(contestKey: string, accessCode?: string): Promise<void> {
     ensureContestCacheScope()
     const body = accessCode ? { access_code: accessCode } : {}
 
-    const result = await requestApi<unknown>(`/contests/${contestKey}/join/`, {
+    const result = await requestApi<unknown>(`/contest/${contestKey}/join/`, {
         method: "POST",
         body,
         errorMessage: "Không thể tham gia cuộc thi"
@@ -242,7 +273,7 @@ export async function joinContest(contestKey: string, accessCode?: string): Prom
 
 export async function leaveContest(contestKey: string): Promise<void> {
     ensureContestCacheScope()
-    const result = await requestApi<unknown>(`/contests/${contestKey}/leave/`, {
+    const result = await requestApi<unknown>(`/contest/${contestKey}/leave/`, {
         method: "POST",
         body: {},
         errorMessage: "Không thể rời cuộc thi hiện tại"

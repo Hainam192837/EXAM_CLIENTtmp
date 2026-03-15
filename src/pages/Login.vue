@@ -51,6 +51,7 @@
 import { ref } from "vue"
 import { useRouter } from "vue-router"
 import { setAuthSession } from "../services/auth"
+import { getActiveExamSessionViaApi } from "../services/examSession"
 
 const router = useRouter()
 
@@ -133,7 +134,14 @@ async function login() {
                 error.value = "Access token khong hop le hoac JWT_SECRET_KEY chua duoc cau hinh"
                 return
             }
-            router.push("/exams")
+
+            const activeSession = await getActiveExamSessionViaApi({ forceRefresh: true })
+            if (activeSession) {
+                await router.push(`/exam/${activeSession.contestKey}/problems`)
+                return
+            }
+
+            await router.push("/exams")
         } else {
             error.value = "Sai tài khoản hoặc mật khẩu"
         }
