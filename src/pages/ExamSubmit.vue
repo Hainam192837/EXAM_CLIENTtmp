@@ -140,6 +140,7 @@ import {
     getSubmittedSourceCode,
     submitExamProblem
 } from "../services/api"
+import { ensureMonacoConfigured } from "../services/monaco"
 import type { ExamProblem } from "../types/problem"
 
 const route = useRoute()
@@ -236,6 +237,7 @@ function handleDocumentClick(event: MouseEvent) {
 
 async function loadProblem() {
     try {
+        await ensureMonacoConfigured()
         problem.value = await getExamProblemDetail(contestKey.value, problemCode.value)
         if (!problem.value) {
             error.value = "Không tìm thấy bài tập"
@@ -256,7 +258,7 @@ async function loadProblem() {
             submitError.value = "Không đồng bộ được source cũ từ server. Bạn vẫn có thể tiếp tục nạp bài."
         }
     } catch {
-        error.value = "Không tải được dữ liệu bài tập"
+        error.value = "Không tải được trình soạn thảo hoặc dữ liệu bài tập"
     } finally {
         loading.value = false
     }
