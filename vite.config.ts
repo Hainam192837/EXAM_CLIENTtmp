@@ -17,31 +17,11 @@ export default defineConfig({
           }
 
           if (id.includes('@guolao/vue-monaco-editor')) {
-            return 'monaco-wrapper'
-          }
-
-          if (id.includes('monaco-editor/esm/vs/editor')) {
-            return 'monaco-core'
-          }
-
-          if (id.includes('monaco-editor/esm/vs/language/typescript')) {
-            return 'monaco-lang-ts'
-          }
-
-          if (id.includes('monaco-editor/esm/vs/language/html')) {
-            return 'monaco-lang-html'
-          }
-
-          if (id.includes('monaco-editor/esm/vs/language/css')) {
-            return 'monaco-lang-css'
-          }
-
-          if (id.includes('monaco-editor/esm/vs/language/json')) {
-            return 'monaco-lang-json'
+            return 'monaco'
           }
 
           if (id.includes('monaco-editor')) {
-            return 'monaco-extra'
+            return 'monaco'
           }
 
           if (id.includes('katex')) {
