@@ -1,7 +1,10 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu } from "electron"
 import { fileURLToPath } from "node:url"
 import path from "node:path"
-import { autoUpdater } from "electron-updater"
+import { execFile } from "node:child_process"
+import electronUpdater from "electron-updater"
+
+const { autoUpdater } = electronUpdater
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -11,8 +14,147 @@ const allowedApiOrigins = [
     "https://171.244.63.31:8443"
 ]
 const updateFeedUrl = (process.env.EXAM_CLIENT_UPDATE_URL || "").trim()
+const shouldForceCloseBlockedProcessesOnWindows = (process.env.EXAM_CLIENT_FORCE_CLOSE_BROWSERS || "true").trim().toLowerCase() !== "false"
 let mainWindow = null
 let updateCheckTimer = null
+let blockedProcessMonitorTimer = null
+let lastBlockedProcessSignature = ""
+
+const blockProcessNames = new Set([
+    "chrome.exe",
+    "msedge.exe",
+    "copilot.exe",
+    "microsoft.copilot.exe",
+    "microsoft.windows.ai.copilot.provider.exe",
+    "firefox.exe",
+    "brave.exe",
+    "opera.exe",
+    "iexplore.exe",
+    "cmd.exe",
+    "powershell.exe",
+    "pwsh.exe",
+    "powershell_ise.exe"
+])
+
+function parseTaskListProcessNames(stdout) {
+    return stdout
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => {
+            const clean = line.replace(/^"/, "")
+            return (clean.split('","')[0] || "").toLowerCase()
+        })
+        .filter(Boolean)
+}
+
+function getRunningBlockedProcessesOnWindows() {
+    return new Promise((resolve) => {
+        execFile(
+            "tasklist",
+            ["/FO", "CSV", "/NH"],
+            { windowsHide: true, timeout: 3000 },
+            (error, stdout) => {
+                if (error || !stdout) {
+                    resolve([])
+                    return
+                }
+
+                const processNames = parseTaskListProcessNames(stdout)
+                const detected = Array.from(new Set(
+                    processNames.filter((name) => blockProcessNames.has(name))
+                )).sort()
+
+                resolve(detected)
+            }
+        )
+    })
+}
+
+function terminateProcessesOnWindows(processes) {
+    if (!processes.length) {
+        return Promise.resolve([])
+    }
+
+    const closeTasks = processes.map((processName) => new Promise((resolve) => {
+        execFile(
+            "taskkill",
+            ["/F", "/T", "/IM", processName],
+            { windowsHide: true, timeout: 3000 },
+            (error) => {
+                resolve({
+                    processName,
+                    closed: !error
+                })
+            }
+        )
+    }))
+
+    return Promise.all(closeTasks)
+}
+
+function setupWindowsBlockedProcessMonitor() {
+    if (process.platform !== "win32") {
+        return
+    }
+
+    const checkBlockedProcesses = async () => {
+        if (!mainWindow || mainWindow.isDestroyed()) {
+            return
+        }
+
+        const detected = await getRunningBlockedProcessesOnWindows()
+        const signature = detected.join(",")
+
+        if (!signature) {
+            lastBlockedProcessSignature = ""
+            return
+        }
+
+        if (signature === lastBlockedProcessSignature) {
+            return
+        }
+
+        lastBlockedProcessSignature = signature
+        console.log("[proctor] Blocked processes detected on Windows:", detected.join(", "))
+
+        let terminated = []
+        if (shouldForceCloseBlockedProcessesOnWindows) {
+            terminated = await terminateProcessesOnWindows(detected)
+            const terminatedNames = terminated.filter((item) => item.closed).map((item) => item.processName)
+            if (terminatedNames.length) {
+                console.log("[proctor] Blocked processes terminated on Windows:", terminatedNames.join(", "))
+            }
+        }
+
+        mainWindow.webContents.send("proctor:browser-detected", {
+            processes: detected,
+            terminated,
+            at: Date.now()
+        })
+
+        await dialog.showMessageBox(mainWindow, {
+            type: "warning",
+            title: shouldForceCloseBlockedProcessesOnWindows ? "Đã tự động đóng ứng dụng bị chặn" : "Phát hiện ứng dụng bị chặn",
+            message: shouldForceCloseBlockedProcessesOnWindows
+                ? "Hệ thống đã phát hiện và tự động đóng ứng dụng không được phép."
+                : "Hệ thống phát hiện ứng dụng không được phép đang mở.",
+            detail: `Tiến trình phát hiện: ${detected.join(", ")}`,
+            buttons: ["Đã hiểu"],
+            defaultId: 0,
+            noLink: true
+        })
+
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.focus()
+        }
+    }
+
+    void checkBlockedProcesses()
+    blockedProcessMonitorTimer = setInterval(() => {
+        void checkBlockedProcesses()
+    }, 3000)
+}
 
 async function handleApiRequest(_event, request) {
     try {
@@ -164,6 +306,7 @@ app.whenReady().then(() => {
     Menu.setApplicationMenu(null)
     createWindow()
     setupAutoUpdater()
+    setupWindowsBlockedProcessMonitor()
 })
 
 app.on("window-all-closed", () => {
@@ -177,6 +320,10 @@ app.on("before-quit", () => {
     if (updateCheckTimer) {
         clearInterval(updateCheckTimer)
         updateCheckTimer = null
+    }
+    if (blockedProcessMonitorTimer) {
+        clearInterval(blockedProcessMonitorTimer)
+        blockedProcessMonitorTimer = null
     }
 })
 

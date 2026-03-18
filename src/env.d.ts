@@ -23,9 +23,19 @@ type ElectronApiResponse = {
   error?: string
 }
 
+type BrowserDetectionPayload = {
+  processes: string[]
+  terminated?: Array<{
+    processName: string
+    closed: boolean
+  }>
+  at: number
+}
+
 interface Window {
   electronAPI?: {
     request: (request: ElectronApiRequest) => Promise<ElectronApiResponse>
+    onBrowserDetected?: (callback: (payload: BrowserDetectionPayload) => void) => (() => void)
   }
 }
 
