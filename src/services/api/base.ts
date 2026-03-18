@@ -19,6 +19,16 @@ export type ApiRequestResult<T> = {
     error: string | null
 }
 
+function logApiServerError(method: ApiMethod, path: string, status: number, data: unknown, message: string) {
+    console.log("[requestApi] server error", {
+        method,
+        path,
+        status,
+        message,
+        data
+    })
+}
+
 function buildApiHeaders(token: string | null): Record<string, string> {
     return {
         "X-Exam-App": EXAM_APP_HEADER_VALUE,
@@ -98,11 +108,13 @@ export async function requestApi<T>(path: string, options?: ApiRequestOptions): 
         const status = typeof response?.status === "number" ? response.status : 0
         const data = (response?.data ?? null) as T | null
         if (!response?.ok) {
+            const errorMessage = parseApiErrorMessage(response?.data, fallbackError)
+            logApiServerError(method, path, status, response?.data, errorMessage)
             handleUnauthorized(status)
             return {
                 data,
                 status,
-                error: parseApiErrorMessage(response?.data, fallbackError)
+                error: errorMessage
             }
         }
 
@@ -131,11 +143,13 @@ export async function requestApi<T>(path: string, options?: ApiRequestOptions): 
         }
 
         if (!res.ok) {
+            const errorMessage = parseApiErrorMessage(parsed, fallbackError)
+            logApiServerError(method, path, res.status, parsed, errorMessage)
             handleUnauthorized(res.status)
             return {
                 data: (parsed as T | null) ?? null,
                 status: res.status,
-                error: parseApiErrorMessage(parsed, fallbackError)
+                error: errorMessage
             }
         }
 

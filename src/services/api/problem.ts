@@ -619,11 +619,17 @@ async function syncSubmittedStatusFromServer(contestKey: string, baseProblems: E
 }
 
 async function fetchContestProblems(contestKey: string): Promise<ExamProblem[]> {
+    console.log("[problem.list] loading...", { contestKey, endpoint: `/contest/${contestKey}/problems/` })
     const result = await requestApi<unknown>(`/contest/${contestKey}/problems/`, {
         method: "GET",
         errorMessage: "Failed to load contest problems"
     })
     if (result.error) {
+        console.log("[problem.list] request error:", {
+            contestKey,
+            status: result.status,
+            error: result.error
+        })
         throw new Error(result.error)
     }
 
@@ -632,6 +638,12 @@ async function fetchContestProblems(contestKey: string): Promise<ExamProblem[]> 
     const problemList = Array.isArray(data)
         ? data
         : ((data as { results?: unknown[] } | null)?.results || [])
+
+    console.log("[problem.list] loaded", {
+        contestKey,
+        status: result.status,
+        total: problemList.length
+    })
 
     return cloneProblems(problemList as ExamProblem[]).map((problem) => normalizeProblem(problem))
 }
