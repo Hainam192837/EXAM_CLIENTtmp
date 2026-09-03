@@ -14,7 +14,7 @@
     "dev": "vite",
     "prebuild": "npm run generate:icons",
     "build": "vue-tsc -b && vite build",
-    "generate:icons": "mkdir -p electron/icons && icon-gen -i electron/logo.png -o electron/icons --ico --icns --ico-name app --icns-name app",
+    "generate:icons": "icon-gen -i electron/logo.png -o electron/icons --ico --icns --ico-name app --icns-name app",
     "preview": "vite preview",
     "electron": "electron electron/main.js",
     "electron:dev": "concurrently -k -n VITE,ELECTRON \"npm:dev\" \"wait-on tcp:5173 && VITE_DEV_SERVER_URL=http://localhost:5173 electron electron/main.js\"",
