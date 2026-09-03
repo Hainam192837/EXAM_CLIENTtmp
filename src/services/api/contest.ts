@@ -151,7 +151,7 @@ async function getContestVersion(contestKey: string, options?: { forceRefresh?: 
 
 export async function getContests(): Promise<Contest[]> {
     ensureContestCacheScope()
-    const result = await requestApi<unknown>("/contests/", {
+    const result = await requestApi<unknown>("/contests", {
         method: "GET",
         errorMessage: "Failed to load contests"
     })
@@ -216,7 +216,7 @@ export async function getContestDetail(contestKey: string, options?: { forceRefr
 
 export async function getCurrentContest(): Promise<Contest | null> {
     ensureContestCacheScope()
-    const result = await requestApi<unknown>("/contests/current/", {
+    const result = await requestApi<unknown>("/contestscurrent/", {
         method: "GET",
         errorMessage: "Không thể kiểm tra cuộc thi hiện tại"
     })
