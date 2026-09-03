@@ -10,8 +10,8 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const allowedApiOrigins = [
-    "http://171.244.63.31:8443",
-    "https://171.244.63.31:8443"
+    "http://hnpct.io.vn",
+    "https://hnpct.io.vn"
 ]
 const updateFeedUrl = (process.env.EXAM_CLIENT_UPDATE_URL || "").trim()
 const shouldForceCloseBlockedProcessesOnWindows = (process.env.EXAM_CLIENT_FORCE_CLOSE_BROWSERS || "true").trim().toLowerCase() !== "false"

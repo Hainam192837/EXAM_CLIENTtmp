@@ -63,13 +63,7 @@
       "electron/preload.js",
       "package.json"
     ],
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "EDU-TMATH",
-        "repo": "EXAM_CLIENT"
-      }
-    ],
+    
     "linux": {
       "icon": "electron/logo.png",
       "maintainer": "TMath Team <dev@tmath.local>",

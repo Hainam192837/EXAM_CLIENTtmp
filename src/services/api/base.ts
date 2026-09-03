@@ -1,4 +1,4 @@
-const API = "http://171.244.63.31:8443/api"
+const API = "https://hnpct.io.vn/api/v3"
 const EXAM_APP_HEADER_VALUE = "exam-client"
 const TOKEN_KEY = "token"
 const USERNAME_KEY = "username"

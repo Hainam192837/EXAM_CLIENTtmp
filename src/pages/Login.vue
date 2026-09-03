@@ -59,7 +59,7 @@ const username = ref("")
 const password = ref("")
 const error = ref("")
 const isLoggingIn = ref(false)
-const AUTH_API = "http://171.244.63.31:8443/api/auth/login/"
+const AUTH_API = "https://hnpct.io.vn/api/v3/auth/login"
 
 type LoginApiResponse = {
     ok: boolean
