@@ -46,8 +46,8 @@
     "icon-gen": "^5.0.0",
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
-    "wait-on": "^8.0.5",
-    "vue-tsc": "^3.1.5"
+    "vue-tsc": "^3.1.5",
+    "wait-on": "^8.0.5"
   },
   "build": {
     "appId": "com.tmath.examclient",
@@ -63,7 +63,6 @@
       "electron/preload.js",
       "package.json"
     ],
-    
     "linux": {
       "icon": "electron/logo.png",
       "maintainer": "TMath Team <dev@tmath.local>",
@@ -83,5 +82,8 @@
         "zip"
       ]
     }
+  },
+  "optionalDependencies": {
+    "@tailwindcss/oxide-linux-x64-gnu": "^4.3.3"
   }
 }
